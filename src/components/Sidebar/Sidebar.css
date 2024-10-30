@@ -16,14 +16,14 @@
 .unread-count {
   display: flex;
   justify-content: flex-end;
-  color: var(--color-text-4);
+  color: var(--color-text-2);
 }
 
 .item-count {
   display: flex;
   justify-content: flex-end;
   width: 50%;
-  color: var(--color-text-4);
+  color: var(--color-text-2);
 }
 
 .menu-header {
@@ -53,7 +53,7 @@
 .custom-menu-item .item-count {
   display: flex;
   justify-content: flex-end;
-  color: var(--color-text-4);
+  color: var(--color-text-2);
 }
 
 .category-title {
@@ -62,7 +62,7 @@
   margin-right: -12px;
   margin-left: -32px;
   border-radius: var(--border-radius-medium);
-  padding: 8px 12px 8px 42px;
+  padding: 3px 12px 3px 42px;
 }
 
 .feed-icon-sidebar {
@@ -91,7 +91,7 @@
 }
 
 .arco-collapse-item-content-box {
-  padding: 4px 0 0 0;
+  padding: 0;
 }
 
 .arco-collapse-item-content {
@@ -165,4 +165,9 @@
 .arco-menu-light .arco-menu-pop-header:hover,
 .arco-menu-light .arco-menu-inline-header:hover {
   background-color: var(--color-neutral-3);
+}
+
+.arco-menu-vertical .arco-menu-item {
+  line-height: 30px;
+  margin: 0;
 }
