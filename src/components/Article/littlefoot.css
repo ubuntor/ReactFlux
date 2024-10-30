@@ -26,7 +26,6 @@
   --popover-width: 22em;
   --popover-scroll-indicator-color: #3f3f3f;
   --popover-tooltip-size: 0.5rem;
-  --popover-font-family: system-ui;
 
   position: relative;
 }
@@ -97,7 +96,7 @@
   border-radius: var(--popover-border-radius);
   box-sizing: border-box;
   color: var(--popover-text-color);
-  font-family: var(--popover-font-family, initial);
+  font-family: var(--popover-font-family);
   font-size: var(--popover-font-size, initial);
   font-style: var(--popover-font-style, initial);
   font-weight: var(--popover-font-weight, initial);
