@@ -262,6 +262,12 @@ const Sidebar = () => {
     setSelectedKeys([currentPath]);
   }, [currentPath]);
 
+  // expand all by default
+  const filteredCategories = useStore(filteredCategoriesState);
+  const categoryIds = filteredCategories.map(
+    (category) => `/category/${category.id}`,
+  );
+
   return (
     <div className="sidebar-container">
       <SimpleBar style={{ maxHeight: "100%" }}>
@@ -315,7 +321,11 @@ const Sidebar = () => {
             text={{ rows: 6 }}
           />
           {isAppDataReady && (
-            <Collapse triggerRegion="icon" bordered={false}>
+            <Collapse
+              triggerRegion="icon"
+              bordered={false}
+              defaultActiveKey={categoryIds}
+            >
               <CategoryGroup />
             </Collapse>
           )}
