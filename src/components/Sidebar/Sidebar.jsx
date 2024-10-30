@@ -159,7 +159,6 @@ const SidebarMenuItems = () => {
         path="/history"
         Icon={IconHistory}
         label={polyglot.t("sidebar.history")}
-        count={historyCount}
       />
     </>
   );
