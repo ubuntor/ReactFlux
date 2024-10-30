@@ -33,8 +33,8 @@ const getSanitizeOptions = () => ({
       "loading",
       "src",
     ],
-    a: ["href", "name", "target", "rel", "referrerpolicy"],
     // used by littlefoot
+    a: ["href", "name", "target", "rel", "referrerpolicy"],
     sup: ["id"],
     li: ["id"],
   },
