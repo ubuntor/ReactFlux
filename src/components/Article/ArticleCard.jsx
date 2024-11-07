@@ -1,7 +1,5 @@
-import { Card, Typography } from "@arco-design/web-react";
-import { IconStarFill } from "@arco-design/web-react/icon";
-import classNames from "classnames";
-import { useState } from "react";
+import { IconClockCircle, IconStarFill } from "@arco-design/web-react/icon";
+import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 import { useStore } from "@nanostores/react";
@@ -10,112 +8,70 @@ import { contentState } from "../../store/contentState";
 import { settingsState } from "../../store/settingsState";
 import { generateReadingTime, generateRelativeTime } from "../../utils/date";
 import FeedIcon from "../ui/FeedIcon";
-import ImageWithLazyLoading from "./ImageWithLazyLoading";
 import "./ArticleCard.css";
 
-const ArticleCardImage = ({ entry, isThumbnail, setHasError }) => {
-  const imageSize = isThumbnail
-    ? { width: "80px", height: "80px" }
-    : { width: "100%", height: "160px" };
+const ASPECT_RATIO_THRESHOLD = 4 / 3;
+
+const ArticleCardImage = ({ entry, isWideImage }) => {
+  const imageSize = isWideImage
+    ? { width: "100%", height: "100%" }
+    : { width: "80px", height: "80px" };
 
   return (
-    <div className={isThumbnail ? "thumbnail" : "cover-image"}>
-      <ImageWithLazyLoading
-        alt={entry.id}
-        borderRadius={isThumbnail ? "2px" : undefined}
+    <div className="card-thumbnail">
+      <img
         src={entry.imgSrc}
-        status={entry.status}
-        width={imageSize.width}
-        height={imageSize.height}
-        setHasError={setHasError}
+        alt={entry.id}
+        style={{
+          width: imageSize.width,
+          height: imageSize.height,
+        }}
       />
     </div>
   );
 };
 
-const ArticleCardContent = ({ entry, showFeedIcon, mini, children }) => {
-  const { showDetailedRelativeTime, showEstimatedReadingTime } =
-    useStore(settingsState);
+const extractTextFromHtml = (html) => {
+  if (!html) {
+    return "";
+  }
 
-  const [hasError, setHasError] = useState(false);
-
-  const contentClass = classNames({
-    "article-card-mini-content": mini,
-    "article-card-mini-content-padding": mini && showFeedIcon,
-  });
-
-  return (
-    <div
-      className={contentClass}
-      style={{
-        width: "100%",
-        boxSizing: "border-box",
-        opacity: entry.status === "unread" ? 1 : 0.5,
-      }}
-    >
-      {entry.imgSrc && !hasError && (
-        <div
-          className={
-            mini
-              ? "article-card-image-container-mini"
-              : "article-card-image-container"
-          }
-          style={{ margin: mini ? "0" : "0 0 10px 0" }}
-        >
-          <ArticleCardImage
-            entry={entry}
-            isThumbnail={mini}
-            setHasError={setHasError}
-          />
-        </div>
-      )}
-      <div className={mini ? "article-card-mini-content-text" : ""}>
-        <Typography.Ellipsis
-          className="article-card-title"
-          rows={2}
-          expandable={false}
-        >
-          {entry.title}
-        </Typography.Ellipsis>
-        <Typography.Text
-          className="article-card-info"
-          style={{ lineHeight: "1em" }}
-        >
-          {showFeedIcon && (
-            <FeedIcon
-              feed={entry.feed}
-              className={mini ? "feed-icon-mini" : "feed-icon"}
-            />
-          )}
-          {entry.feed.title}
-          <br />
-          {generateRelativeTime(entry.published_at, showDetailedRelativeTime)}
-          {showEstimatedReadingTime && (
-            <>
-              <br />
-              {generateReadingTime(entry.reading_time)}
-            </>
-          )}
-        </Typography.Text>
-        {entry.starred && <IconStarFill className="icon-starred" />}
-      </div>
-      <div>{children}</div>
-    </div>
-  );
+  return html
+    .replace(/<[^>]*>/g, "") // Remove all HTML tags
+    .replace(/&nbsp;/g, " ") // Replace space entities
+    .replace(/&#(\d+);/g, (_match, dec) => String.fromCharCode(dec)) // Handle numeric HTML entities
+    .replace(/&([a-z]+);/g, (_match, entity) => {
+      // Handle named HTML entities
+      const entities = {
+        amp: "&",
+        lt: "<",
+        gt: ">",
+        quot: '"',
+        apos: "'",
+      };
+      return entities[entity] || "";
+    })
+    .trim();
 };
 
-const ArticleCard = ({ entry, handleEntryClick, mini, children }) => {
-  const { markReadOnScroll, showFeedIcon } = useStore(settingsState);
+const ArticleCard = ({ entry, handleEntryClick, children }) => {
+  const {
+    markReadOnScroll,
+    showFeedIcon,
+    showDetailedRelativeTime,
+    showEstimatedReadingTime,
+  } = useStore(settingsState);
   const { activeContent } = useStore(contentState);
-
   const isSelected = activeContent && entry.id === activeContent.id;
-
   const { handleToggleStatus } = useEntryActions();
-
   const isUnread = entry.status === "unread";
 
   const [hasBeenInView, setHasBeenInView] = useState(false);
   const [shouldSkip, setShouldSkip] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [isWideImage, setIsWideImage] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
   const toggleStatus = () => handleToggleStatus(entry);
   const threshold = 20;
 
@@ -125,6 +81,7 @@ const ArticleCard = ({ entry, handleEntryClick, mini, children }) => {
       if (!markReadOnScroll || !isUnread) {
         return;
       }
+
       if (inView) {
         setHasBeenInView(true);
       } else if (hasBeenInView) {
@@ -137,34 +94,114 @@ const ArticleCard = ({ entry, handleEntryClick, mini, children }) => {
     },
   });
 
+  useEffect(() => {
+    if (entry.imgSrc) {
+      const img = new Image();
+      img.src = entry.imgSrc;
+      img.onload = () => {
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        setIsWideImage(aspectRatio >= ASPECT_RATIO_THRESHOLD);
+        setIsImageLoaded(true);
+      };
+      img.onerror = () => {
+        setHasError(true);
+      };
+    }
+  }, [entry.imgSrc]);
+
+  const getLineClamp = () => {
+    const hasSideImage = entry.imgSrc && !hasError && !isWideImage;
+    return !showEstimatedReadingTime && hasSideImage ? 4 : 3;
+  };
+
+  const previewContent = useMemo(
+    () => extractTextFromHtml(entry.content),
+    [entry.content],
+  );
+
   return (
     <div
-      className={
-        isSelected ? "article-card card-custom-selected-style" : "article-card"
-      }
-      key={entry.id}
+      ref={ref}
+      className={isSelected ? "card-wrapper selected" : "card-wrapper"}
+      onClick={() => handleEntryClick(entry)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleEntryClick(entry);
+        }
+      }}
+      data-entry-id={entry.id}
     >
-      <div ref={ref}>
-        <Card
-          className="card-custom-style"
-          data-entry-id={entry.id}
-          hoverable
-          onClick={() => handleEntryClick(entry)}
-          bordered={false}
-        >
-          <Card.Meta
-            description={
-              <ArticleCardContent
+      <div
+        className="card-content"
+        style={{
+          opacity: isUnread ? 1 : 0.5,
+        }}
+      >
+        <div className="card-header">
+          <div className="card-meta">
+            <div className="card-source">
+              {showFeedIcon && (
+                <FeedIcon feed={entry.feed} className="feed-icon-mini" />
+              )}
+              <div className="card-source-content">
+                <span className="card-source-title">{entry.feed.title}</span>
+                <span className="card-author">{entry.author}</span>
+              </div>
+            </div>
+            <div className="card-time-wrapper">
+              <span className="card-star">
+                {entry.starred && <IconStarFill className="icon-starred" />}
+              </span>
+              <span className="card-time">
+                {generateRelativeTime(
+                  entry.published_at,
+                  showDetailedRelativeTime,
+                )}
+              </span>
+            </div>
+          </div>
+
+          <h3 className="card-title">{entry.title}</h3>
+        </div>
+
+        {entry.imgSrc && !hasError && isImageLoaded && isWideImage && (
+          <div className="card-image-wide">
+            <ArticleCardImage
+              entry={entry}
+              setHasError={setHasError}
+              isWideImage={isWideImage}
+            />
+          </div>
+        )}
+
+        <div className="card-body">
+          <div className="card-text">
+            {showEstimatedReadingTime && (
+              <div className="card-reading-time">
+                <IconClockCircle />
+                <span>{generateReadingTime(entry.reading_time)}</span>
+              </div>
+            )}
+            <p
+              className="card-preview"
+              style={{ WebkitLineClamp: getLineClamp() }}
+            >
+              {previewContent}
+            </p>
+          </div>
+          {entry.imgSrc && !hasError && isImageLoaded && !isWideImage && (
+            <div className="card-image-mini">
+              <ArticleCardImage
                 entry={entry}
-                showFeedIcon={showFeedIcon}
-                mini={mini}
-              >
-                {children}
-              </ArticleCardContent>
-            }
-          />
-        </Card>
+                setHasError={setHasError}
+                isWideImage={isWideImage}
+              />
+            </div>
+          )}
+        </div>
       </div>
+      {children}
     </div>
   );
 };

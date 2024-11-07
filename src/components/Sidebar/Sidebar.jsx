@@ -20,7 +20,8 @@ import {
   IconStar,
   IconUnorderedList,
 } from "@arco-design/web-react/icon";
-import { useEffect, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import SimpleBar from "simplebar-react";
 
@@ -219,14 +220,73 @@ const FeedMenuGroup = ({ categoryId }) => {
   const { showUnreadFeedsOnly } = useStore(settingsState);
   const feedsGroupedById = useStore(feedsGroupedByIdState);
 
+  const parentRef = useRef(null);
+  const scrollableNodeRef = useRef(null);
+
+  const filteredFeeds = useMemo(
+    () =>
+      feedsGroupedById[categoryId]?.filter(
+        (feed) => !showUnreadFeedsOnly || feed.unreadCount > 0,
+      ) || [],
+    [feedsGroupedById, categoryId, showUnreadFeedsOnly],
+  );
+
+  const virtualizer = useVirtualizer({
+    count: filteredFeeds.length,
+    getScrollElement: () => scrollableNodeRef.current,
+    estimateSize: () => 40,
+    overscan: 10,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (scrollableNodeRef.current) {
+        virtualizer.measure();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [virtualizer]);
+
   return (
-    <>
-      {feedsGroupedById[categoryId]
-        ?.filter((feed) => !showUnreadFeedsOnly || feed.unreadCount > 0)
-        .map((feed) => (
-          <FeedMenuItem key={`/feed/${feed.id}`} feed={feed} />
-        ))}
-    </>
+    <SimpleBar
+      ref={parentRef}
+      scrollableNodeProps={{
+        ref: scrollableNodeRef,
+        style: { minHeight: "40px" },
+      }}
+      style={{ maxHeight: 400 }}
+    >
+      <div
+        style={{
+          height: virtualizer.getTotalSize(),
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualItems.map((virtualRow) => {
+          const feed = filteredFeeds[virtualRow.index];
+          return (
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              <FeedMenuItem feed={feed} />
+            </div>
+          );
+        })}
+      </div>
+    </SimpleBar>
   );
 };
 
@@ -261,7 +321,7 @@ const CategoryGroup = () => {
 };
 
 const Sidebar = () => {
-  const { homePage, showAllFeeds, showUnreadFeedsOnly } =
+  const { homePage, showHiddenFeeds, showUnreadFeedsOnly } =
     useStore(settingsState);
   const { isAppDataReady } = useStore(dataState);
   const { polyglot } = useStore(polyglotState);
@@ -273,7 +333,7 @@ const Sidebar = () => {
   const currentPath = location.pathname;
 
   const handleToggleFeedsVisibility = () => {
-    updateSettings({ showAllFeeds: !showAllFeeds });
+    updateSettings({ showHiddenFeeds: !showHiddenFeeds });
   };
 
   const handleToggleUnreadFeedsOnly = () => {
@@ -340,14 +400,14 @@ const Sidebar = () => {
                 droplist={
                   <Menu>
                     <MenuItem key="1" onClick={handleToggleFeedsVisibility}>
-                      {showAllFeeds ? (
+                      {showHiddenFeeds ? (
                         <IconEyeInvisible className="icon-right" />
                       ) : (
                         <IconEye className="icon-right" />
                       )}
-                      {showAllFeeds
-                        ? polyglot.t("sidebar.hide_some_feeds")
-                        : polyglot.t("sidebar.show_all_feeds")}
+                      {showHiddenFeeds
+                        ? polyglot.t("sidebar.hide_hidden_feeds")
+                        : polyglot.t("sidebar.show_hidden_feeds")}
                     </MenuItem>
                     <MenuItem key="2" onClick={handleToggleUnreadFeedsOnly}>
                       {showUnreadFeedsOnly ? (

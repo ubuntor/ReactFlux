@@ -25,6 +25,9 @@
 }
 
 @media screen and (display-mode: fullscreen) {
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
   .app {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -41,9 +44,6 @@
   .arco-menu-light {
     padding-top: env(safe-area-inset-top);
     padding-left: env(safe-area-inset-left);
-  }
-  .action-buttons {
-    padding-bottom: env(safe-area-inset-bottom) !important;
   }
   body {
     min-height: 100vh;
