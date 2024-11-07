@@ -26,6 +26,7 @@ const ArticleCardImage = ({ entry, isWideImage }) => {
           width: imageSize.width,
           height: imageSize.height,
         }}
+        loading="lazy"
       />
     </div>
   );
