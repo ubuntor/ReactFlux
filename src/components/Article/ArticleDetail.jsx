@@ -47,15 +47,15 @@ const getHtmlParserOptions = (imageSources, togglePhotoSlider) => ({
     } else if (node.type === "tag" && node.name === "img") {
       if (/video\.bsky\.app.*thumbnail\.jpg$/.test(node.attribs.src)) {
         // bsky video from openrss
-        const videoSrc = node.attribs.src.replace(
-          "thumbnail.jpg",
-          "playlist.m3u8",
-        );
+        const thumbnail = node.attribs.src;
+        const videoSrc = thumbnail.replace("thumbnail.jpg", "playlist.m3u8");
         return (
           <ReactHlsPlayer
             src={videoSrc}
             controls={true}
             loop={true}
+            poster={thumbnail}
+            playsinline={true}
             hlsConfig={{
               startLevel: -1, // force autolevel
             }}
