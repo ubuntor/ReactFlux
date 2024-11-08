@@ -55,7 +55,7 @@ const getHtmlParserOptions = (imageSources, togglePhotoSlider) => ({
             controls={true}
             loop={true}
             poster={thumbnail}
-            playsinline={true}
+            playsInline={true}
             hlsConfig={{
               startLevel: -1, // force autolevel
             }}
