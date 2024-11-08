@@ -2,7 +2,7 @@ import { Divider, Tag, Typography } from "@arco-design/web-react";
 import ReactHtmlParser from "html-react-parser";
 import { littlefoot } from "littlefoot";
 import { forwardRef, useEffect } from "react";
-import ReactHlsPlayer from "react-hls-player";
+import ReactHlsPlayer from "react-hls-video-player";
 import { PhotoSlider } from "react-photo-view";
 import { useNavigate } from "react-router-dom";
 import sanitizeHtml from "../../utils/sanitizeHtml";
