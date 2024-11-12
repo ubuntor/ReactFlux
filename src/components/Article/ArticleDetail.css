@@ -21,7 +21,8 @@
 .article-body audio,
 .article-body iframe,
 .article-body img,
-.article-body video {
+.article-body video,
+.article-body mux-player {
   display: block;
   margin: 10px auto;
 }
@@ -116,18 +117,50 @@ p {
   height: auto;
 }
 
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.article-body td {
+  vertical-align: top;
+  padding: 8px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.article-body td img {
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+}
+
+.article-body td a {
+  display: inline-block;
+  max-width: 100%;
+}
+
 .img-mask {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 @media screen and (max-width: 768px) {
-  .article-body .big-image {
+  .edge-to-edge .article-body .big-image {
     border-radius: 0;
     display: block;
     margin: 10px var(--image-margin);
     width: var(--image-scale);
     max-width: var(--image-scale);
+  }
+
+  .article-body .big-image {
+    border-radius: var(--border-radius-medium);
+    display: block;
+    margin: 10px auto;
+    width: 100%;
+    max-width: 100%;
   }
 
   .article-body .image-overlay-button {
@@ -136,6 +169,33 @@ p {
     margin: 0 var(--image-margin);
     width: var(--image-scale);
     max-width: var(--image-scale);
+  }
+
+  .article-body table {
+    display: block;
+    max-width: 100%;
+  }
+
+  .article-body tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .article-body tr {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .article-body td {
+    display: block;
+    width: 100%;
+  }
+
+  .article-body td .big-image,
+  .article-body td .image-overlay-button {
+    margin: 10px 0;
+    width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -163,27 +223,4 @@ p {
 /*video 相关样式 */
 .article-body video {
   border-radius: var(--border-radius-medium);
-}
-
-.swipe-hint {
-  --hint-size: 24px;
-  --hint-padding: 12px;
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: var(--hint-padding);
-  background-color: rgb(var(--primary-6));
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 100;
-  width: var(--hint-size);
-  height: var(--hint-size);
-}
-
-.swipe-hint.left {
-  left: 16px;
-}
-
-.swipe-hint.right {
-  right: 16px;
 }

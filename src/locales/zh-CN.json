@@ -1,4 +1,8 @@
 {
+  "app": {
+    "new_version_available": "新版本可用",
+    "new_version_available_description": "请检查最新版本在 GitHub 上的发布"
+  },
   "login": {
     "success": "登录成功",
     "auth_error": "请检查您的服务器地址和凭证",
@@ -31,6 +35,12 @@
     "hide_hidden_feeds": "不显示隐藏订阅源",
     "show_read_feeds": "显示已读订阅源",
     "hide_read_feeds": "不显示已读订阅源",
+    "import_opml": "导入 OPML",
+    "export_opml": "导出 OPML",
+    "import_opml_success": "OPML 导入成功",
+    "import_opml_error": "OPML 导入失败",
+    "export_opml_success": "OPML 导出成功",
+    "export_opml_error": "OPML 导出失败",
     "settings": "设置",
     "miniflux_settings": "Miniflux 设置",
     "report_issue": "报告问题",
@@ -42,8 +52,11 @@
     "logout_description": "您确定要登出吗？此操作无法撤消。"
   },
   "actions": {
+    "check": "查看",
+    "dismiss": "关闭",
     "copy_to_clipboard_tooltip": "复制到剪贴板",
     "copied": "已复制！",
+    "copy_failed": "复制失败，请稍后再试",
     "mark_as_read_error": "标记为已读失败，请稍后再试",
     "mark_as_unread_error": "标记为未读失败，请稍后再试",
     "star_error": "收藏失败，请稍后再试",
@@ -51,7 +64,11 @@
     "fetched_content_success": "内容获取成功",
     "fetched_content_error": "内容获取失败，请稍后再试",
     "saved_to_third-party_services_success": "成功保存到第三方服务",
-    "saved_to_third-party_services_error": "保存到第三方服务失败，请稍后再试，或检查您的集成设置"
+    "saved_to_third-party_services_error": "保存到第三方服务失败，请稍后再试，或检查您的集成设置",
+    "no_previous_article": "没有上一篇文章",
+    "no_previous_unread_article": "没有上一篇未读文章",
+    "no_next_article": "没有下一篇文章",
+    "no_next_unread_article": "没有下一篇未读文章"
   },
   "article_card": {
     "reading_time": "需要 %{time}阅读",
@@ -117,7 +134,7 @@
     "refresh_feed": "刷新订阅源",
     "bulk_update_success": "批量更新成功",
     "bulk_update_error": "批量更新失败，请重试",
-    "bulk_refresh_error_feeds_message": "正在刷新错误订阅源，请稍候",
+    "bulk_refresh_error_feeds_message": "正在刷新错误订阅源...",
     "bulk_refresh_error_feeds_result": "订阅源已刷新。成功： %{success}, 失败： %{failure}",
     "refresh_feeds_tooltip": "刷新订阅源",
     "refresh_feeds_title": "刷新订阅源",
@@ -196,8 +213,6 @@
     "mark_read_on_scroll_description": "当文章滚动出屏幕时自动标记为已读"
   },
   "appearance": {
-    "theme_switcher_label": "主题",
-    "theme_switcher_description": "选择您的主题",
     "theme_color_label": "主题颜色",
     "theme_color_description": "选择您的主题颜色",
     "theme_color_aria_label": "将主题颜色更改为 %{color}",
@@ -210,17 +225,14 @@
     "language_label": "语言",
     "language_description": "选择您的语言：",
     "font_size_label": "字体大小",
-    "font_size_description": "调整文章文本大小",
     "article_width_label": "文章宽度",
-    "article_width_description": "调整文章宽度",
+    "edge_to_edge_images_label": "全宽图片",
     "font_family_label": "文章字体",
-    "font_family_description": "选择您的文章正文字体",
     "font_family_system": "默认",
     "font_family_noto_sans": "思源黑体",
     "font_family_noto_serif": "思源宋体",
     "font_family_lxgw_wenkai": "霞鹜文楷",
-    "title_alignment_label": "文章标题对齐方式",
-    "title_alignment_description": "选择文章标题的对齐方式"
+    "title_alignment_label": "文章标题对齐方式"
   },
   "hotkeys": {
     "key": "键",

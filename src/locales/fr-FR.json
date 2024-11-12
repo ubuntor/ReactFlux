@@ -1,4 +1,8 @@
 {
+  "app": {
+    "new_version_available": "Nouvelle version disponible",
+    "new_version_available_description": "Veuillez vérifier la dernière version sur GitHub"
+  },
   "login": {
     "success": "Connexion réussie",
     "auth_error": "Veuillez vérifier votre adresse de serveur et vos informations d'identification",
@@ -31,6 +35,12 @@
     "hide_hidden_feeds": "Masquer les flux masqués",
     "show_read_feeds": "Afficher les flux lus",
     "hide_read_feeds": "Masquer les flux lus",
+    "import_opml": "Importer OPML",
+    "export_opml": "Exporter OPML",
+    "import_opml_success": "OPML importé avec succès",
+    "import_opml_error": "Erreur lors de l'importation de OPML",
+    "export_opml_success": "OPML exporté avec succès",
+    "export_opml_error": "Erreur lors de l'exportation de OPML",
     "settings": "Paramètres",
     "miniflux_settings": "Paramètres de Miniflux",
     "report_issue": "Signaler un problème",
@@ -42,8 +52,11 @@
     "logout_description": "Êtes-vous sûr de vouloir vous déconnecter ? Cette action est irréversible."
   },
   "actions": {
+    "check": "Vérifier",
+    "dismiss": "Descartar",
     "copy_to_clipboard_tooltip": "Copier dans le presse-papiers",
     "copied": "Copié !",
+    "copy_failed": "Erreur lors de la copie, veuillez réessayer plus tard",
     "mark_as_read_error": "Impossible de marquer comme lu, veuillez réessayer plus tard",
     "mark_as_unread_error": "Impossible de marquer comme non lu, veuillez réessayer plus tard",
     "star_error": "Impossible de marquer comme favori, veuillez réessayer plus tard",
@@ -51,7 +64,11 @@
     "fetched_content_success": "Contenu récupéré avec succès",
     "fetched_content_error": "Impossible de récupérer le contenu, veuillez réessayer plus tard",
     "saved_to_third-party_services_success": "Sauvegardé avec succès dans les services tiers",
-    "saved_to_third-party_services_error": "Impossible de sauvegarder dans les services tiers, veuillez réessayer plus tard ou vérifier vos paramètres d'intégration"
+    "saved_to_third-party_services_error": "Impossible de sauvegarder dans les services tiers, veuillez réessayer plus tard ou vérifier vos paramètres d'intégration",
+    "no_previous_article": "Aucun article précédent",
+    "no_previous_unread_article": "Aucun article précédent non lu",
+    "no_next_article": "Aucun article suivant",
+    "no_next_unread_article": "Aucun article suivant non lu"
   },
   "article_card": {
     "reading_time": "%{time} de lecture",
@@ -117,7 +134,7 @@
     "refresh_feed": "Rafraîchir le flux",
     "bulk_update_success": "Mise à jour en masse réussie",
     "bulk_update_error": "Impossible de mettre à jour en masse, veuillez réessayer",
-    "bulk_refresh_error_feeds_message": "Début de la mise à jour des flux en erreur, veuillez patienter",
+    "bulk_refresh_error_feeds_message": "Début de la mise à jour des flux en erreur...",
     "bulk_refresh_error_feeds_result": "Flux mis à jour. Succès : %{success}, Échec : %{failure}",
     "refresh_feeds_tooltip": "Rafraîchir les flux",
     "refresh_feeds_title": "Rafraîchir les flux",
@@ -196,8 +213,6 @@
     "mark_read_on_scroll_description": "Marquer automatiquement les articles comme lus lorsqu'ils sont défilés hors de la zone visible de l'écran"
   },
   "appearance": {
-    "theme_switcher_label": "Thème",
-    "theme_switcher_description": "Choisir votre thème",
     "theme_color_label": "Couleur du thème",
     "theme_color_description": "Choisir votre couleur de thème",
     "theme_color_aria_label": "Changer la couleur du thème en %{color}",
@@ -208,19 +223,16 @@
     "show_feed_icon_label": "Afficher l'icône du flux",
     "show_feed_icon_description": "Afficher l'icône du flux dans la liste des flux et la carte d'article",
     "language_label": "Langue",
-    "language_description": "Choisir votre langue :",
+    "language_description": "Choisir votre langue :",
     "font_size_label": "Taille de la police",
-    "font_size_description": "Ajuster la taille de la police des articles",
     "article_width_label": "Largeur de l'article",
-    "article_width_description": "Ajuster la largeur de l'article",
+    "edge_to_edge_images_label": "Images bord à bord",
     "font_family_label": "Police de l'article",
-    "font_family_description": "Choisir votre police de l'article",
     "font_family_system": "Par défaut",
     "font_family_noto_sans": "Noto Sans SC",
     "font_family_noto_serif": "Noto Serif SC",
     "font_family_lxgw_wenkai": "LXGW WenKai Screen",
-    "title_alignment_label": "Alignement du titre de l'article",
-    "title_alignment_description": "Choisir l'alignement du titre de l'article"
+    "title_alignment_label": "Alignement du titre de l'article"
   },
   "hotkeys": {
     "key": "Touche",
