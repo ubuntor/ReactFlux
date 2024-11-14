@@ -8,7 +8,7 @@
   padding-bottom: 40px;
 }
 
-.article-body * {
+.article-body img {
   max-width: 100%;
 }
 
@@ -20,9 +20,8 @@
 
 .article-body audio,
 .article-body iframe,
-.article-body img,
-.article-body video,
-.article-body mux-player {
+.article-body img:not(.icon-image),
+.article-body .plyr--video {
   display: block;
   margin: 10px auto;
 }
@@ -218,9 +217,4 @@ p {
 .article-content td {
   color: var(--color-text-3);
   font-size: 0.8em;
-}
-
-/*video 相关样式 */
-.article-body video {
-  border-radius: var(--border-radius-medium);
 }
