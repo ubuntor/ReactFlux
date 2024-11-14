@@ -16,8 +16,6 @@ const App = () => {
   useLanguage()
   useTheme()
 
-  const { hasUpdate } = useVersionCheck()
-
   const { isBelowLarge } = useScreenWidth()
 
   const { polyglot } = useStore(polyglotState)
@@ -25,40 +23,6 @@ const App = () => {
   useEffect(() => {
     hideSpinner()
   }, [])
-
-  useEffect(() => {
-    if (hasUpdate) {
-      const id = "new-version-available"
-      Notification.info({
-        id,
-        title: polyglot.t("app.new_version_available"),
-        content: polyglot.t("app.new_version_available_description"),
-        duration: 0,
-        btn: (
-          <span>
-            <Button
-              size="small"
-              style={{ marginRight: 8 }}
-              type="secondary"
-              onClick={() => Notification.remove(id)}
-            >
-              {polyglot.t("actions.dismiss")}
-            </Button>
-            <Button
-              size="small"
-              type="primary"
-              onClick={() => {
-                window.open(`https://github.com/${GITHUB_REPO_PATH}/commits/main`, "_blank")
-                Notification.remove(id)
-              }}
-            >
-              {polyglot.t("actions.check")}
-            </Button>
-          </span>
-        ),
-      })
-    }
-  }, [hasUpdate, polyglot])
 
   return (
     polyglot && (
