@@ -4,8 +4,9 @@ import useFeedIcons from "@/hooks/useFeedIcons"
 import { getSecondHostname } from "@/utils/url"
 
 const getFallbackIconURL = (feed) => {
-  const hostname = getSecondHostname(feed.site_url) ?? getSecondHostname(feed.feed_url)
-  return `https://icons.duckduckgo.com/ip3/${hostname}.ico`
+  //const hostname = getSecondHostname(feed.site_url) ?? getSecondHostname(feed.feed_url)
+  //return `https://icons.duckduckgo.com/ip3/${hostname}.ico`
+  return "/fallback.png"
 }
 
 const FeedIcon = ({ feed, className = "feed-icon" }) => {
