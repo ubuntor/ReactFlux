@@ -75,7 +75,7 @@ const initHls = (mediaRef, src, onError) => {
     throw new Error("HLS is not supported in this browser.")
   }
 
-  const hls = new Hls()
+  const hls = new Hls({ startLevel: -1 })
   hls.loadSource(src)
   hls.attachMedia(mediaRef.current)
   hls.on(Hls.Events.ERROR, (event, data) => {
@@ -112,6 +112,7 @@ const PlyrPlayer = ({
         playerRef.current = new Plyr(mediaRef.current, {
           controls: DEFAULT_CONTROLS,
           loadSprite: true,
+          loop: { active: true },
           ...plyrOptions,
         })
 
