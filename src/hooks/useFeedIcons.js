@@ -1,11 +1,9 @@
 import { useStore } from "@nanostores/react"
-import { map } from "nanostores"
 import { useEffect } from "react"
 
 import { getFeedIcon } from "@/apis"
+import { defaultIcon, feedIconsState } from "@/store/feedIconsState"
 
-const feedIconsState = map()
-export const resetFeedIcons = () => feedIconsState.set({})
 const loadingIcons = new Set()
 
 const useFeedIcons = (id) => {
@@ -21,7 +19,7 @@ const useFeedIcons = (id) => {
     getFeedIcon(id)
       .then((data) => {
         const iconURL = `data:${data.data}`
-        feedIconsState.setKey(id, iconURL)
+        feedIconsState.setKey(id, { ...defaultIcon, url: iconURL })
         loadingIcons.delete(id)
         return null
       })

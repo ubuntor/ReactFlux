@@ -1,6 +1,7 @@
 import { useStore } from "@nanostores/react"
 import { useEffect, useRef } from "react"
 
+import { saveEnclosureProgression } from "@/apis"
 import { contentState } from "@/store/contentState"
 import "plyr/dist/plyr.css"
 import "./PlyrPlayer.css"
@@ -25,7 +26,9 @@ const MIME_TYPES = {
 
 const DEFAULT_CONTROLS = [
   "play-large",
+  "rewind",
   "play",
+  "fast-forward",
   "progress",
   "current-time",
   "mute",
@@ -93,6 +96,8 @@ const PlyrPlayer = ({
   elementType = "video",
   plyrOptions = {},
   poster = "",
+  style = {},
+  enclosure = null,
   onPlayerInit = () => {},
   onError = () => {},
 }) => {
@@ -101,6 +106,7 @@ const PlyrPlayer = ({
   const mediaRef = useRef(null)
   const playerRef = useRef(null)
   const hlsRef = useRef(null)
+  const lastSavedTimeRef = useRef(0)
 
   useEffect(() => {
     if (!src || !activeContent) {
@@ -124,6 +130,29 @@ const PlyrPlayer = ({
           hlsRef.current = await initHls(mediaRef, src, onError)
         } else {
           mediaRef.current.src = src
+        }
+
+        if (enclosure) {
+          playerRef.current.on("loadeddata", () => {
+            playerRef.current.currentTime = enclosure.media_progression
+            lastSavedTimeRef.current = enclosure.media_progression
+          })
+
+          const updateProgression = () => {
+            const { currentTime } = playerRef.current
+            saveEnclosureProgression(enclosure.id, Math.floor(currentTime))
+            lastSavedTimeRef.current = currentTime
+          }
+
+          playerRef.current.on("timeupdate", () => {
+            const { currentTime } = playerRef.current
+            if (currentTime - lastSavedTimeRef.current >= 10) {
+              updateProgression()
+            }
+          })
+
+          playerRef.current.on("pause", updateProgression)
+          playerRef.current.on("ended", updateProgression)
         }
 
         onPlayerInit(playerRef.current)
@@ -168,7 +197,7 @@ const PlyrPlayer = ({
     )
   }
 
-  return renderMedia()
+  return <div style={{ ...style, margin: "0 auto" }}>{renderMedia()}</div>
 }
 
 export default PlyrPlayer

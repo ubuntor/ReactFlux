@@ -94,7 +94,7 @@ const handleTableBasedCode = (node) => {
     return null
   }
 
-  const [_lineNumbersTd, codeTd] = tr.children
+  const [, codeTd] = tr.children
 
   const codePre = codeTd.children.find((child) => child.name === "pre")
 
@@ -108,8 +108,19 @@ const handleTableBasedCode = (node) => {
 const handleFigure = (node, imageSources, togglePhotoSlider) => {
   const firstChild = node.children[0]
 
-  if (firstChild.name === "img") {
-    return handleImage(firstChild, imageSources, togglePhotoSlider)
+  // Handle multiple images in figure
+  if (node.children.some((child) => child.name === "img")) {
+    return (
+      <>
+        {node.children.map((child, index) =>
+          child.name === "img" ? (
+            <div key={`figure-img-${index}`}>
+              {handleImage(child, imageSources, togglePhotoSlider)}
+            </div>
+          ) : null,
+        )}
+      </>
+    )
   }
 
   // Handle table-based code blocks with line numbers
@@ -216,6 +227,8 @@ const ArticleDetail = forwardRef((_, ref) => {
   const { id: categoryId, title: categoryTitle } = activeContent.feed.category
   const { id: feedId, title: feedTitle } = activeContent.feed
 
+  const { coverSource, mediaPlayerEnclosure, isMedia } = activeContent
+
   // pretty footnotes
   useEffect(() => {
     littlefoot()
@@ -278,6 +291,16 @@ const ArticleDetail = forwardRef((_, ref) => {
               "--article-width": articleWidth,
             }}
           >
+            {isMedia && mediaPlayerEnclosure && (
+              <PlyrPlayer
+                enclosure={mediaPlayerEnclosure}
+                poster={coverSource}
+                src={mediaPlayerEnclosure.url}
+                style={{
+                  maxWidth: mediaPlayerEnclosure.mime_type.startsWith("video/") ? "100%" : "400px",
+                }}
+              />
+            )}
             {parsedHtml}
             <PhotoSlider
               bannerVisible={!isBelowMedium}

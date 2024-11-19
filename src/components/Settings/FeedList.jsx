@@ -136,6 +136,7 @@ const RefreshModal = ({ visible, setVisible }) => {
     const id = "bulk-refresh-error-feeds"
     Message.loading({
       id,
+      duration: 0,
       content: polyglot.t("feed_table.bulk_refresh_error_feeds_message"),
     })
 
@@ -578,7 +579,7 @@ const FeedList = () => {
             placeholder={polyglot.t("search.placeholder")}
             addBefore={
               <Select
-                style={{ width: 80 }}
+                style={{ width: "auto" }}
                 value={filterType}
                 triggerProps={{
                   autoAlignPopupWidth: false,
