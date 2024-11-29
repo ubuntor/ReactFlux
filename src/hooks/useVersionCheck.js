@@ -1,12 +1,15 @@
+import { useStore } from "@nanostores/react"
 import { ofetch } from "ofetch"
 import { useEffect, useState } from "react"
 
-import { hasPWAUpdate } from "@/pwa"
+import { dataState } from "@/store/dataState"
 import { GITHUB_REPO_PATH, UPDATE_NOTIFICATION_KEY } from "@/utils/constants"
 import { checkIsInLast24Hours, getTimestamp } from "@/utils/date"
 import buildInfo from "@/version-info.json"
 
 function useVersionCheck() {
+  const { isAppDataReady } = useStore(dataState)
+
   const [hasUpdate, setHasUpdate] = useState(false)
 
   const dismissUpdate = () => {
@@ -15,7 +18,7 @@ function useVersionCheck() {
   }
 
   useEffect(() => {
-    if (!import.meta.env.PROD || hasPWAUpdate()) {
+    if (!isAppDataReady || !import.meta.env.PROD) {
       return
     }
 
@@ -38,7 +41,7 @@ function useVersionCheck() {
     }
 
     checkUpdate()
-  }, [])
+  }, [isAppDataReady])
 
   return { hasUpdate, dismissUpdate }
 }

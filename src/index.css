@@ -43,9 +43,11 @@ body,
   margin: 0;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
   background-color: var(--color-bg-1);
 }
 
-a:not(:last-child) {
-  margin-right: 10px;
+a {
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
 }

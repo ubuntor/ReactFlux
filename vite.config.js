@@ -18,9 +18,7 @@ export default defineConfig({
         enabled: true,
       },
       workbox: {
-        cleanupOutdatedCaches: true,
         skipWaiting: true,
-        clientsClaim: true,
       },
     }),
     // visualizer({
@@ -48,7 +46,7 @@ export default defineConfig({
         manualChunks: {
           arco: ["@arco-design/web-react"],
           highlight: ["highlight.js"],
-          react: ["react", "react-dom", "react-router-dom"],
+          react: ["react", "react-dom", "react-router"],
         },
       },
     },
