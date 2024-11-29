@@ -13,6 +13,8 @@ import useVersionCheck from "./hooks/useVersionCheck"
 import { GITHUB_REPO_PATH } from "./utils/constants"
 import hideSpinner from "./utils/loading"
 
+import { unreadTotalState } from "@/store/dataState"
+
 const App = () => {
   useLanguage()
   useTheme()
@@ -25,6 +27,35 @@ const App = () => {
   useEffect(() => {
     hideSpinner()
   }, [])
+
+  const unreadTotal = useStore(unreadTotalState)
+
+  // unread total dynamic favicon
+  useEffect(() => {
+    const faviconLink = document.querySelector('link[rel~="icon"]') // hack...
+    if (unreadTotal === 0) {
+      faviconLink.href = "/favicon.ico"
+    } else {
+      const canvas = document.createElement("canvas")
+      canvas.width = 48
+      canvas.height = 48
+      const ctx = canvas.getContext("2d")
+      ctx.font = "36px sans-serif"
+      ctx.fillStyle = "black"
+      ctx.fillRect(0, 0, 48, 48)
+      ctx.fillStyle = "white"
+      ctx.textAlign = "center"
+      ctx.textBaseline = "middle"
+      const text = "" + unreadTotal
+      const measure = ctx.measureText(text)
+      ctx.fillText(
+        text,
+        24,
+        24 + (measure.actualBoundingBoxAscent - measure.actualBoundingBoxDescent) / 2,
+      )
+      faviconLink.href = canvas.toDataURL("image/png")
+    }
+  }, [unreadTotal])
 
   return (
     polyglot && (
