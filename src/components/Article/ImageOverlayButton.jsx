@@ -49,17 +49,27 @@ const ImageOverlayButton = ({ node, index, togglePhotoSlider, isLinkWrapper = fa
   const imgNode = findImageNode(node, isLinkWrapper)
 
   useEffect(() => {
+    let isSubscribed = true
+
     const imgNode = findImageNode(node, isLinkWrapper)
     const imgSrc = imgNode.attribs.src
     const img = new Image()
     img.src = imgSrc
 
     img.onload = () => {
-      const isSmall = Math.max(img.width, img.height) <= MIN_THUMBNAIL_SIZE
-      const isLarge = img.width > 768
+      if (isSubscribed) {
+        const isSmall = Math.max(img.width, img.height) <= MIN_THUMBNAIL_SIZE
+        const isLarge = img.width > 768
 
-      setIsIcon(isSmall)
-      setIsBigImage(isLarge && !isSmall)
+        setIsIcon(isSmall)
+        setIsBigImage(isLarge && !isSmall)
+      }
+    }
+
+    return () => {
+      isSubscribed = false
+      img.src = ""
+      img.onload = null
     }
   }, [node, isLinkWrapper])
 
@@ -91,27 +101,27 @@ const ImageOverlayButton = ({ node, index, togglePhotoSlider, isLinkWrapper = fa
       <div className="image-container">
         {isLinkWrapper ? (
           <div>
-            <a {...node.attribs}>
-              <ImageComponent
-                imgNode={imgNode}
-                index={index}
-                isBigImage={isBigImage}
-                isIcon={isIcon}
-                togglePhotoSlider={togglePhotoSlider}
-              />
-            </a>
-            <Tooltip content={node.attribs.href}>
-              <Tag
-                className="link-tag"
-                icon={<IconLink />}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  window.open(node.attribs.href, "_blank")
-                }}
-              >
-                {node.attribs.href}
-              </Tag>
-            </Tooltip>
+            <ImageComponent
+              imgNode={imgNode}
+              index={index}
+              isBigImage={isBigImage}
+              isIcon={isIcon}
+              togglePhotoSlider={togglePhotoSlider}
+            />
+            {node.attribs.href !== "#" && (
+              <Tooltip content={node.attribs.href}>
+                <Tag
+                  className="link-tag"
+                  icon={<IconLink />}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    window.open(node.attribs.href, "_blank")
+                  }}
+                >
+                  {node.attribs.href}
+                </Tag>
+              </Tooltip>
+            )}
           </div>
         ) : (
           <ImageComponent
