@@ -5,6 +5,7 @@ export const allowedIframeHostnames = [
   "www.youtube-nocookie.com",
   "player.bilibili.com",
   "player.vimeo.com",
+  "bandcamp.com",
 ]
 
 const getSanitizeOptions = () => ({
