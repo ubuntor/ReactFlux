@@ -146,18 +146,14 @@ const handleFigure = (node, imageSources, togglePhotoSlider) => {
 
   // Handle multiple images in figure
   if (hasImages) {
-    return (
-      <>
-        {node.children.map(
-          (child, index) =>
-            child.name === "img" && (
-              <div key={`figure-img-${index}`}>
-                {handleImage(child, imageSources, togglePhotoSlider)}
-              </div>
-            ),
-        )}
-      </>
+    node.children = node.children.map((child, index) =>
+      child.name === "img" ? (
+        <div key={`figure-img-${index}`}>{handleImage(child, imageSources, togglePhotoSlider)}</div>
+      ) : (
+        child
+      ),
     )
+    return node
   }
 
   return null
@@ -252,7 +248,6 @@ const ArticleDetail = forwardRef((_, ref) => {
 
   const imageSources = extractImageSources(activeContent.content)
   const htmlParserOptions = getHtmlParserOptions(imageSources, togglePhotoSlider)
-
   const parsedHtml = ReactHtmlParser(activeContent.content, htmlParserOptions)
   const { id: categoryId, title: categoryTitle } = activeContent.feed.category
   const { id: feedId, title: feedTitle } = activeContent.feed
