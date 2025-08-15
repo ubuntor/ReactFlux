@@ -132,7 +132,7 @@ p {
 
 .article-body td {
   vertical-align: top;
-  padding: 8px;
+  padding: 8px 8px 8px 0;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -146,11 +146,6 @@ p {
 .article-body td a {
   display: inline-block;
   max-width: 100%;
-}
-
-.img-mask {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 @media screen and (max-width: 768px) {
@@ -210,6 +205,7 @@ p {
 .article-content {
   flex: 1;
   min-height: 0;
+  padding: 8px 10px;
   color: var(--color-text-2);
 }
 

@@ -1,10 +1,21 @@
-import { IconClockCircle, IconStarFill } from "@arco-design/web-react/icon"
+import { Divider, Dropdown, Menu } from "@arco-design/web-react/es"
+import {
+  IconClockCircle,
+  IconLaunch,
+  IconMinusCircle,
+  IconRecord,
+  IconSave,
+  IconStar,
+  IconStarFill,
+} from "@arco-design/web-react/icon"
 import { useStore } from "@nanostores/react"
-import { useEffect, useMemo, useState, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import FeedIcon from "@/components/ui/FeedIcon"
 import useEntryActions from "@/hooks/useEntryActions"
+import { polyglotState } from "@/hooks/useLanguage"
 import { contentState } from "@/store/contentState"
+import { dataState } from "@/store/dataState"
 import { settingsState } from "@/store/settingsState"
 import { WIDE_IMAGE_RATIO } from "@/utils/constants"
 import { generateReadingTime, generateRelativeTime } from "@/utils/date"
@@ -15,17 +26,21 @@ const ArticleCardImage = ({ entry, isWideImage }) => {
     ? { width: "100%", height: "100%" }
     : { width: "80px", height: "80px" }
 
+  const { coverDisplayMode } = useStore(settingsState)
+
+  const imageStyle = {
+    width: imageSize.width,
+    height: imageSize.height,
+    // When set to banner mode, add maximum height limit and object-fit style
+    ...(coverDisplayMode === "banner" && {
+      maxHeight: "183px",
+      objectFit: "cover",
+    }),
+  }
+
   return (
     <div className="card-thumbnail">
-      <img
-        alt={entry.id}
-        loading="lazy"
-        src={entry.coverSource}
-        style={{
-          width: imageSize.width,
-          height: imageSize.height,
-        }}
-      />
+      <img alt={entry.id} loading="lazy" src={entry.coverSource} style={imageStyle} />
     </div>
   )
 }
@@ -54,12 +69,27 @@ const extractTextFromHtml = (html) => {
 }
 
 const ArticleCard = ({ entry, handleEntryClick, children }) => {
-  const { markReadOnScroll, showFeedIcon, showDetailedRelativeTime, showEstimatedReadingTime } =
-    useStore(settingsState)
+  const {
+    coverDisplayMode,
+    enableContextMenu,
+    markReadOnScroll,
+    showDetailedRelativeTime,
+    showEstimatedReadingTime,
+    showFeedIcon,
+  } = useStore(settingsState)
   const { activeContent } = useStore(contentState)
+  const { hasIntegrations } = useStore(dataState)
+  const { polyglot } = useStore(polyglotState)
   const isSelected = activeContent?.id === entry.id
-  const { handleToggleStatus } = useEntryActions()
   const isUnread = entry.status === "unread"
+  const isStarred = entry.starred
+
+  const {
+    handleSaveToThirdPartyServices,
+    handleToggleStarred,
+    handleToggleStatus,
+    handleOpenLinkExternally,
+  } = useEntryActions()
 
   const [hasError, setHasError] = useState(false)
   const [isWideImage, setIsWideImage] = useState(false)
@@ -69,7 +99,7 @@ const ArticleCard = ({ entry, handleEntryClick, children }) => {
   const cardRef = useRef(null)
 
   useEffect(() => {
-    // 如果文章已读或未启用滚动标记已读，则不需要观察
+    // If the article is read or scroll marking is not enabled, no observation needed
     if (!isUnread || !markReadOnScroll) {
       return
     }
@@ -80,19 +110,19 @@ const ArticleCard = ({ entry, handleEntryClick, children }) => {
       ([entry]) => {
         const { boundingClientRect, rootBounds, isIntersecting } = entry
 
-        // 当文章进入视口时记录状态
+        // Record status when the article enters the viewport
         if (isIntersecting) {
           wasVisible.current = true
         } else if (wasVisible.current && boundingClientRect.top < rootBounds.top) {
-          // 只有当卡片完全在视口顶部以上，且之前显示过时才标记已读
+          // Only mark as read when the card is completely above the viewport top and was previously visible
           markAsRead()
           observer.unobserve(entry.target)
         }
       },
       {
-        // 设置根元素为滚动容器
+        // Set the root element as the scroll container
         root: document.querySelector(".entry-list"),
-        // 设置阈值为0,表示完全离开视口时触发
+        // Set threshold to 0, triggered when completely leaving the viewport
         threshold: 0.2,
       },
     )
@@ -120,7 +150,16 @@ const ArticleCard = ({ entry, handleEntryClick, children }) => {
         if (isSubscribed) {
           const aspectRatio = img.naturalWidth / img.naturalHeight
           const isThumbnailSize = Math.max(img.width, img.height) <= 250
-          setIsWideImage(aspectRatio >= WIDE_IMAGE_RATIO && !isThumbnailSize)
+
+          // Determine image display mode based on user settings
+          if (coverDisplayMode === "auto") {
+            setIsWideImage(aspectRatio >= WIDE_IMAGE_RATIO && !isThumbnailSize)
+          } else if (coverDisplayMode === "banner") {
+            setIsWideImage(true)
+          } else if (coverDisplayMode === "thumbnail") {
+            setIsWideImage(false)
+          }
+
           setIsImageLoaded(true)
         }
       }
@@ -138,7 +177,7 @@ const ArticleCard = ({ entry, handleEntryClick, children }) => {
         img.onerror = null
       }
     }
-  }, [entry.coverSource])
+  }, [entry.coverSource, coverDisplayMode])
 
   const getLineClamp = () => {
     const hasSideImage = entry.coverSource && !hasError && !isWideImage
@@ -148,76 +187,135 @@ const ArticleCard = ({ entry, handleEntryClick, children }) => {
   const previewContent = useMemo(() => extractTextFromHtml(entry.content), [entry.content])
 
   return (
-    <div
-      ref={cardRef}
-      className={isSelected ? "card-wrapper selected" : "card-wrapper"}
-      data-entry-id={entry.id}
-      onClick={() => handleEntryClick(entry)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          handleEntryClick(entry)
-        }
-      }}
+    <Dropdown
+      disabled={!enableContextMenu}
+      position="bl"
+      trigger="contextMenu"
+      droplist={
+        <Menu>
+          <Menu.Item key="open-in-browser" onClick={() => handleOpenLinkExternally(entry)}>
+            <div className="settings-menu-item">
+              <span>{polyglot.t("article_card.open_link_externally_tooltip")}</span>
+              <IconLaunch />
+            </div>
+          </Menu.Item>
+
+          <Divider style={{ margin: "4px 0" }} />
+
+          <Menu.Item key="toggle-status" onClick={() => handleToggleStatus(entry)}>
+            <div className="settings-menu-item">
+              <span>
+                {isUnread
+                  ? polyglot.t("article_card.mark_as_read_tooltip")
+                  : polyglot.t("article_card.mark_as_unread_tooltip")}
+              </span>
+              {isUnread ? <IconMinusCircle /> : <IconRecord />}
+            </div>
+          </Menu.Item>
+
+          <Menu.Item key="toggle-starred" onClick={() => handleToggleStarred(entry)}>
+            <div className="settings-menu-item">
+              <span>
+                {isStarred
+                  ? polyglot.t("article_card.unstar_tooltip")
+                  : polyglot.t("article_card.star_tooltip")}
+              </span>
+              {isStarred ? <IconStarFill style={{ color: "#ffcd00" }} /> : <IconStar />}
+            </div>
+          </Menu.Item>
+
+          {hasIntegrations && (
+            <Menu.Item
+              key="save-to-third-party-services"
+              onClick={() => handleSaveToThirdPartyServices(entry)}
+            >
+              <div className="settings-menu-item">
+                <span>{polyglot.t("article_card.save_to_third_party_services_tooltip")}</span>
+                <IconSave />
+              </div>
+            </Menu.Item>
+          )}
+        </Menu>
+      }
     >
       <div
-        className="card-content"
-        style={{
-          opacity: isUnread ? 1 : 0.5,
+        ref={cardRef}
+        className={isSelected ? "card-wrapper selected" : "card-wrapper"}
+        data-entry-id={entry.id}
+        onClick={() => handleEntryClick(entry)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            handleEntryClick(entry)
+          }
         }}
       >
-        <div className="card-header">
-          <div className="card-meta">
-            <div className="card-source">
-              {showFeedIcon && <FeedIcon className="feed-icon-mini" feed={entry.feed} />}
-              <div className="card-source-content">
-                <span className="card-source-title">{entry.feed.title}</span>
-                <span className="card-author">{entry.author}</span>
+        <div
+          className="card-content"
+          style={{
+            opacity: isUnread ? 1 : 0.5,
+          }}
+        >
+          <div className="card-header">
+            <div className="card-meta">
+              <div className="card-source">
+                {showFeedIcon && <FeedIcon className="feed-icon-mini" feed={entry.feed} />}
+                <div className="card-source-content">
+                  <span className="card-source-title">{entry.feed.title}</span>
+                  <span className="card-author">{entry.author}</span>
+                </div>
+              </div>
+              <div className="card-time-wrapper">
+                <span className="card-star">
+                  <IconStarFill
+                    className="icon-starred"
+                    style={{ opacity: entry.starred ? 1 : 0 }}
+                  />
+                </span>
+                <span className="card-time">
+                  {generateRelativeTime(entry.published_at, showDetailedRelativeTime)}
+                </span>
               </div>
             </div>
-            <div className="card-time-wrapper">
-              <span className="card-star">
-                <IconStarFill className="icon-starred" style={{ opacity: entry.starred ? 1 : 0 }} />
-              </span>
-              <span className="card-time">
-                {generateRelativeTime(entry.published_at, showDetailedRelativeTime)}
-              </span>
-            </div>
+
+            <h3 className="card-title">{entry.title}</h3>
           </div>
 
-          <h3 className="card-title">{entry.title}</h3>
-        </div>
-
-        {entry.coverSource && !hasError && isImageLoaded && isWideImage && (
-          <div className="card-image-wide">
-            <ArticleCardImage entry={entry} isWideImage={isWideImage} setHasError={setHasError} />
-          </div>
-        )}
-
-        <div className="card-body">
-          <div className="card-text">
-            {showEstimatedReadingTime && (
-              <div className="card-reading-time">
-                <IconClockCircle />
-                <span>{generateReadingTime(entry.reading_time)}</span>
-              </div>
-            )}
-            <p
-              className="card-preview"
-              style={{ lineClamp: getLineClamp(), WebkitLineClamp: getLineClamp() }}
-            >
-              {previewContent}
-            </p>
-          </div>
-          {entry.coverSource && !hasError && isImageLoaded && !isWideImage && (
-            <div className="card-image-mini">
+          {entry.coverSource && !hasError && isImageLoaded && isWideImage && (
+            <div className="card-image-wide">
               <ArticleCardImage entry={entry} isWideImage={isWideImage} setHasError={setHasError} />
             </div>
           )}
+
+          <div className="card-body">
+            <div className="card-text">
+              {showEstimatedReadingTime && (
+                <div className="card-reading-time">
+                  <IconClockCircle />
+                  <span>{generateReadingTime(entry.reading_time)}</span>
+                </div>
+              )}
+              <p
+                className="card-preview"
+                style={{ lineClamp: getLineClamp(), WebkitLineClamp: getLineClamp() }}
+              >
+                {previewContent}
+              </p>
+            </div>
+            {entry.coverSource && !hasError && isImageLoaded && !isWideImage && (
+              <div className="card-image-mini">
+                <ArticleCardImage
+                  entry={entry}
+                  isWideImage={isWideImage}
+                  setHasError={setHasError}
+                />
+              </div>
+            )}
+          </div>
         </div>
+        {children}
       </div>
-      {children}
-    </div>
+    </Dropdown>
   )
 }
 

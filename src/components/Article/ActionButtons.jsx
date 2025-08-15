@@ -7,61 +7,49 @@ import {
   IconCheck,
   IconClose,
   IconCloudDownload,
+  IconLaunch,
+  IconMessage,
   IconMinusCircle,
   IconMoreVertical,
   IconRecord,
   IconSave,
+  IconShareExternal,
   IconStar,
   IconStarFill,
 } from "@arco-design/web-react/icon"
 import { useStore } from "@nanostores/react"
 import { memo, useEffect, useState } from "react"
 
+import ArticleTOC from "./ArticleTOC"
+
 import CustomTooltip from "@/components/ui/CustomTooltip"
 import useEntryActions from "@/hooks/useEntryActions"
 import useKeyHandlers from "@/hooks/useKeyHandlers"
 import { polyglotState } from "@/hooks/useLanguage"
 import useScreenWidth from "@/hooks/useScreenWidth"
-import { contentState, nextContentState, prevContentState } from "@/store/contentState"
+import {
+  articleHeadingsState,
+  contentState,
+  nextContentState,
+  prevContentState,
+} from "@/store/contentState"
 import { dataState } from "@/store/dataState"
 import { settingsState, updateSettings } from "@/store/settingsState"
 import "./ActionButtons.css"
 
 const DesktopButtons = memo(
-  ({
-    commonButtons,
-    hasIntegrations,
-    prevContent,
-    nextContent,
-    navigateToPreviousArticle,
-    navigateToNextArticle,
-    handleSaveToThirdPartyServices,
-    polyglot,
-  }) => (
+  ({ commonButtons, hasIntegrations, handleSaveToThirdPartyServices, polyglot }) => (
     <>
       <div className="left-side">
         {commonButtons.close}
-        <CustomTooltip mini content={polyglot.t("article_card.previous_tooltip")}>
-          <Button
-            disabled={!prevContent}
-            icon={<IconArrowLeft />}
-            shape="circle"
-            onClick={navigateToPreviousArticle}
-          />
-        </CustomTooltip>
-        <CustomTooltip mini content={polyglot.t("article_card.next_tooltip")}>
-          <Button
-            disabled={!nextContent}
-            icon={<IconArrowRight />}
-            shape="circle"
-            onClick={navigateToNextArticle}
-          />
-        </CustomTooltip>
+        {commonButtons.prev}
+        {commonButtons.next}
       </div>
       <div className="right-side">
         {commonButtons.status}
         {commonButtons.star}
         {commonButtons.fetch}
+        {commonButtons.toc}
         {hasIntegrations && (
           <CustomTooltip
             mini
@@ -77,12 +65,15 @@ const DesktopButtons = memo(
 )
 DesktopButtons.displayName = "DesktopButtons"
 
-const MobileButtons = memo(({ commonButtons }) => (
+const MobileButtons = memo(({ commonButtons, hasHeadings }) => (
   <div className="mobile-buttons">
     {commonButtons.status}
     {commonButtons.star}
+    {commonButtons.prev}
     {commonButtons.close}
-    {commonButtons.fetch}
+    {commonButtons.next}
+    {!hasHeadings && commonButtons.fetch}
+    {commonButtons.toc}
     {commonButtons.more}
   </div>
 ))
@@ -92,21 +83,30 @@ const ActionButtons = () => {
   const { activeContent } = useStore(contentState)
   const { hasIntegrations } = useStore(dataState)
   const { polyglot } = useStore(polyglotState)
+  const headings = useStore(articleHeadingsState)
 
-  const { articleWidth, edgeToEdgeImages, fontSize, fontFamily, titleAlignment } =
-    useStore(settingsState)
+  const {
+    articleWidth,
+    edgeToEdgeImages,
+    enableSwipeGesture,
+    fontSize,
+    fontFamily,
+    titleAlignment,
+  } = useStore(settingsState)
 
   const nextContent = useStore(nextContentState)
   const prevContent = useStore(prevContentState)
 
   const [dropdownVisible, setDropdownVisible] = useState(false)
   const [isFetchedOriginal, setIsFetchedOriginal] = useState(false)
+  const hasHeadings = headings.length > 0
 
   const {
     handleFetchContent,
     handleSaveToThirdPartyServices,
     handleToggleStarred,
     handleToggleStatus,
+    handleOpenLinkExternally,
   } = useEntryActions()
 
   const { exitDetailView, navigateToNextArticle, navigateToPreviousArticle } = useKeyHandlers()
@@ -163,7 +163,31 @@ const ActionButtons = () => {
     }
   }
 
+  const handleViewComments = () => window.open(activeContent.comments_url, "_blank")
+
   const commonButtons = {
+    prev:
+      isBelowMedium && enableSwipeGesture ? undefined : (
+        <CustomTooltip mini content={polyglot.t("article_card.previous_tooltip")}>
+          <Button
+            disabled={!prevContent}
+            icon={<IconArrowLeft />}
+            shape="circle"
+            onClick={navigateToPreviousArticle}
+          />
+        </CustomTooltip>
+      ),
+    next:
+      isBelowMedium && enableSwipeGesture ? undefined : (
+        <CustomTooltip mini content={polyglot.t("article_card.next_tooltip")}>
+          <Button
+            disabled={!nextContent}
+            icon={<IconArrowRight />}
+            shape="circle"
+            onClick={navigateToNextArticle}
+          />
+        </CustomTooltip>
+      ),
     status: (
       <CustomTooltip
         mini
@@ -214,6 +238,7 @@ const ActionButtons = () => {
         />
       </CustomTooltip>
     ),
+    toc: hasHeadings ? <ArticleTOC /> : null,
     more: (
       <Dropdown
         popupVisible={dropdownVisible}
@@ -225,20 +250,57 @@ const ActionButtons = () => {
             {hasIntegrations && isBelowMedium && (
               <Menu.Item
                 key="save_to_third_party_services"
-                onClick={handleSaveToThirdPartyServices}
+                onClick={() => handleSaveToThirdPartyServices(activeContent)}
               >
                 <span>{polyglot.t("article_card.save_to_third_party_services_tooltip")}</span>
               </Menu.Item>
             )}
 
-            {navigator.share && (
-              <>
-                <Menu.Item key="share" onClick={handleShare}>
-                  <span>{polyglot.t("article_card.share_tooltip")}</span>
-                </Menu.Item>
-                <Divider style={{ margin: "4px 0" }} />
-              </>
+            {isBelowMedium && hasHeadings && (
+              <Menu.Item
+                key="fetch_original"
+                disabled={isFetchedOriginal}
+                onClick={async () => {
+                  await handleFetchContent()
+                  setIsFetchedOriginal(true)
+                }}
+              >
+                <div className="settings-menu-item">
+                  <span>{polyglot.t("article_card.fetch_original_tooltip")}</span>
+                  <IconCloudDownload />
+                </div>
+              </Menu.Item>
             )}
+
+            {navigator.share && (
+              <Menu.Item key="share" onClick={handleShare}>
+                <div className="settings-menu-item">
+                  <span>{polyglot.t("article_card.share_tooltip")}</span>
+                  <IconShareExternal />
+                </div>
+              </Menu.Item>
+            )}
+
+            {activeContent.comments_url !== "" && (
+              <Menu.Item key="view-comments" onClick={handleViewComments}>
+                <div className="settings-menu-item">
+                  <span>{polyglot.t("article_card.view_comments_tooltip")}</span>
+                  <IconMessage />
+                </div>
+              </Menu.Item>
+            )}
+
+            <Menu.Item
+              key="open-in-browser"
+              onClick={() => handleOpenLinkExternally(activeContent)}
+            >
+              <div className="settings-menu-item">
+                <span>{polyglot.t("article_card.open_link_externally_tooltip")}</span>
+                <IconLaunch />
+              </div>
+            </Menu.Item>
+
+            <Divider style={{ margin: "4px 0" }} />
 
             <Menu.Item key="title-alignment">
               <div className="settings-menu-item">
@@ -341,11 +403,11 @@ const ActionButtons = () => {
   return (
     <div className={`action-buttons ${isBelowMedium ? "mobile" : ""}`}>
       {isBelowMedium ? (
-        <MobileButtons commonButtons={commonButtons} />
+        <MobileButtons commonButtons={commonButtons} hasHeadings={hasHeadings} />
       ) : (
         <DesktopButtons
           commonButtons={commonButtons}
-          handleSaveToThirdPartyServices={handleSaveToThirdPartyServices}
+          handleSaveToThirdPartyServices={() => handleSaveToThirdPartyServices(activeContent)}
           hasIntegrations={hasIntegrations}
           navigateToNextArticle={navigateToNextArticle}
           navigateToPreviousArticle={navigateToPreviousArticle}

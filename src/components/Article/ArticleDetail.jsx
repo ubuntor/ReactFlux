@@ -2,11 +2,15 @@ import { Divider, Tag, Typography } from "@arco-design/web-react"
 import { useStore } from "@nanostores/react"
 import ReactHtmlParser from "html-react-parser"
 import { littlefoot } from "littlefoot"
-import { forwardRef, useEffect } from "react"
-import { PhotoSlider } from "react-photo-view"
+import { forwardRef, useEffect, useRef } from "react"
 import { useNavigate } from "react-router"
-import "react-photo-view/dist/react-photo-view.css"
 import SimpleBar from "simplebar-react"
+import Lightbox from "yet-another-react-lightbox"
+import Counter from "yet-another-react-lightbox/plugins/counter"
+import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen"
+import Zoom from "yet-another-react-lightbox/plugins/zoom"
+import "yet-another-react-lightbox/styles.css"
+import "yet-another-react-lightbox/plugins/counter.css"
 
 import CodeBlock from "./CodeBlock"
 import ImageOverlayButton from "./ImageOverlayButton"
@@ -16,7 +20,12 @@ import FadeTransition from "@/components/ui/FadeTransition"
 import PlyrPlayer from "@/components/ui/PlyrPlayer"
 import usePhotoSlider from "@/hooks/usePhotoSlider"
 import useScreenWidth from "@/hooks/useScreenWidth"
-import { contentState, setFilterString, setFilterType } from "@/store/contentState"
+import {
+  contentState,
+  setActiveContent,
+  setFilterString,
+  setFilterType,
+} from "@/store/contentState"
 import { settingsState } from "@/store/settingsState"
 import { generateReadableDate, generateReadingTime } from "@/utils/date"
 import { extractImageSources } from "@/utils/images"
@@ -74,7 +83,7 @@ const decodeAndParseCodeContent = (preElement) => {
   return preElement.children
     .map((child) => {
       if (child.type === "tag" && child.name === "p") {
-        return (child.children[0]?.data ?? "") + "\n"
+        return `${child.children[0]?.data ?? ""}\n`
       }
       if (child.type === "tag" && child.name === "strong") {
         return child.children[0]?.data ?? ""
@@ -128,6 +137,34 @@ const handleContentTable = (node) => {
   return node
 }
 
+// Helper function to process figcaption content
+const processFigcaptionContent = (children) => {
+  if (!children) {
+    return null
+  }
+
+  return children.map((child, index) => {
+    if (child.type === "text") {
+      return child.data
+    }
+    if (child.type === "tag") {
+      const Tag = child.name
+      const props = child.attribs || {}
+
+      if (child.name === "br") {
+        return null
+      }
+
+      return (
+        <Tag key={index} {...props}>
+          {child.children ? processFigcaptionContent(child.children) : null}
+        </Tag>
+      )
+    }
+    return null
+  })
+}
+
 const handleFigure = (node, imageSources, togglePhotoSlider) => {
   const firstChild = node.children[0]
   const hasImages = node.children.some((child) => child.name === "img")
@@ -144,19 +181,32 @@ const handleFigure = (node, imageSources, togglePhotoSlider) => {
     return codeContent ? <CodeBlock>{codeContent}</CodeBlock> : null
   }
 
-  // Handle multiple images in figure
+  // Handle multiple images in figure with figcaption support
   if (hasImages) {
-    node.children = node.children.map((child, index) =>
-      child.name === "img" ? (
-        <div key={`figure-img-${index}`}>{handleImage(child, imageSources, togglePhotoSlider)}</div>
-      ) : (
-        child
-      ),
+    return (
+      <figure>
+        {node.children.map((child, index) => {
+          if (child.name === "img") {
+            return (
+              <div key={`figure-img-${index}`}>
+                {handleImage(child, imageSources, togglePhotoSlider)}
+              </div>
+            )
+          }
+          if (child.name === "figcaption") {
+            return (
+              <figcaption key={`figure-caption-${index}`}>
+                {processFigcaptionContent(child.children)}
+              </figcaption>
+            )
+          }
+          return child
+        })}
+      </figure>
     )
-    return node
   }
 
-  return null
+  return node
 }
 
 const handleCodeBlock = (node) => {
@@ -229,9 +279,11 @@ const getHtmlParserOptions = (imageSources, togglePhotoSlider) => ({
 const ArticleDetail = forwardRef((_, ref) => {
   const navigate = useNavigate()
   const { isBelowMedium } = useScreenWidth()
+
   const { activeContent } = useStore(contentState)
   const { articleWidth, edgeToEdgeImages, fontFamily, fontSize, titleAlignment } =
     useStore(settingsState)
+  const scrollContainerRef = useRef(null)
 
   const { isPhotoSliderVisible, setIsPhotoSliderVisible, selectedIndex, setSelectedIndex } =
     usePhotoSlider()
@@ -239,6 +291,9 @@ const ArticleDetail = forwardRef((_, ref) => {
   const handleAuthorFilter = () => {
     setFilterType("author")
     setFilterString(activeContent.author)
+    if (isBelowMedium) {
+      setActiveContent(null)
+    }
   }
 
   const togglePhotoSlider = (index) => {
@@ -266,13 +321,25 @@ const ArticleDetail = forwardRef((_, ref) => {
     littlefoot()
   }, [])
 
+  // Focus the scrollable area when activeContent changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const scrollElement = scrollContainerRef.current.getScrollElement()
+      scrollElement?.focus()
+    }
+  }, [activeContent.id])
+
   return (
     <article
       ref={ref}
       className={`article-content ${edgeToEdgeImages ? "edge-to-edge" : ""}`}
       tabIndex={-1}
     >
-      <SimpleBar className="scroll-container">
+      <SimpleBar
+        ref={scrollContainerRef}
+        className="scroll-container"
+        scrollableNodeProps={{ tabIndex: -1 }}
+      >
         <FadeTransition y={20}>
           <div
             className="article-header"
@@ -334,17 +401,16 @@ const ArticleDetail = forwardRef((_, ref) => {
               />
             )}
             {parsedHtml}
-            <PhotoSlider
-              bannerVisible={!isBelowMedium}
-              images={imageSources.map((item) => ({ src: item, key: item }))}
+            <Lightbox
+              carousel={{ finite: true, padding: 0 }}
+              close={() => setIsPhotoSliderVisible(false)}
+              controller={{ closeOnBackdropClick: true }}
               index={selectedIndex}
-              loop={false}
-              maskClassName={"img-mask"}
-              maskOpacity={0.6}
-              visible={isPhotoSliderVisible}
-              onIndexChange={setSelectedIndex}
-              onClose={() => {
-                setIsPhotoSliderVisible(false)
+              open={isPhotoSliderVisible}
+              plugins={[Counter, Fullscreen, Zoom]}
+              slides={imageSources.map((item) => ({ src: item }))}
+              on={{
+                view: ({ index }) => setSelectedIndex(index),
               }}
             />
           </div>

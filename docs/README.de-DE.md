@@ -6,6 +6,8 @@ In anderen Sprachen lesen: [English](../README.md), [Español](README.es-ES.md),
 
 ReactFlux ist ein Drittanbieter-Web-Frontend für [Miniflux](https://github.com/miniflux/v2), das ein benutzerfreundlicheres Leseerlebnis bieten soll.
 
+Unterstützte Miniflux-Versionen: 2.1.4 und höher.
+
 Die wichtigsten Merkmale sind:
 
 - Modernes Oberflächendesign
@@ -71,7 +73,7 @@ location / {
 }
 ```
 
-Oder mit Caddy, müssen Sie die folgende Konfiguration hinzufügen:
+Wenn Caddy genutzt wird, muss möglicherweise diese Konfiguration hinzugefügt werden:
 
 ```caddyfile
 try_files {path} {path}/ /index.html

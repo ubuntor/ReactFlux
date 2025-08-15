@@ -1,10 +1,13 @@
-import { Divider, InputNumber, Select, Switch } from "@arco-design/web-react"
+import { Divider, InputNumber, Select, Slider, Switch } from "@arco-design/web-react"
 import { useStore } from "@nanostores/react"
 
 import SettingItem from "./SettingItem"
 
 import { polyglotState } from "@/hooks/useLanguage"
+import useScreenWidth from "@/hooks/useScreenWidth"
+import { dataState } from "@/store/dataState"
 import { settingsState, updateSettings } from "@/store/settingsState"
+import compareVersions from "@/utils/version"
 
 const languageOptions = [
   { label: "Deutsch", value: "de-DE" },
@@ -15,9 +18,22 @@ const languageOptions = [
 ]
 
 const General = () => {
-  const { homePage, language, markReadOnScroll, orderBy, pageSize, removeDuplicates } =
-    useStore(settingsState)
+  const { version } = useStore(dataState)
+  const {
+    enableContextMenu,
+    enableSwipeGesture,
+    homePage,
+    language,
+    markReadBy,
+    markReadOnScroll,
+    orderBy,
+    pageSize,
+    removeDuplicates,
+    swipeSensitivity,
+    updateContentOnFetch,
+  } = useStore(settingsState)
   const { polyglot } = useStore(polyglotState)
+  const { isBelowMedium } = useScreenWidth()
 
   const homePageOptions = [
     {
@@ -152,6 +168,24 @@ const General = () => {
       <Divider />
 
       <SettingItem
+        description={polyglot.t("settings.mark_read_by_description")}
+        title={polyglot.t("settings.mark_read_by_label")}
+      >
+        <Select
+          className="input-select"
+          value={markReadBy}
+          onChange={(value) => updateSettings({ markReadBy: value })}
+        >
+          <Select.Option value="view">{polyglot.t("settings.mark_read_on_view")}</Select.Option>
+          <Select.Option value="manually">
+            {polyglot.t("settings.mark_read_manually")}
+          </Select.Option>
+        </Select>
+      </SettingItem>
+
+      <Divider />
+
+      <SettingItem
         description={polyglot.t("settings.mark_read_on_scroll_description")}
         title={polyglot.t("settings.mark_read_on_scroll_label")}
       >
@@ -160,6 +194,71 @@ const General = () => {
           onChange={(value) => updateSettings({ markReadOnScroll: value })}
         />
       </SettingItem>
+
+      <Divider />
+
+      <SettingItem
+        description={polyglot.t("settings.enable_context_menu_description")}
+        title={polyglot.t("settings.enable_context_menu_label")}
+      >
+        <Switch
+          checked={enableContextMenu}
+          onChange={(value) => updateSettings({ enableContextMenu: value })}
+        />
+      </SettingItem>
+
+      {compareVersions(version, "2.2.8") >= 0 && (
+        <>
+          <Divider />
+
+          <SettingItem
+            description={polyglot.t("settings.update_content_on_fetch_description")}
+            title={polyglot.t("settings.update_content_on_fetch_label")}
+          >
+            <Switch
+              checked={updateContentOnFetch}
+              onChange={(value) => updateSettings({ updateContentOnFetch: value })}
+            />
+          </SettingItem>
+        </>
+      )}
+
+      {isBelowMedium && (
+        <>
+          <Divider />
+
+          <SettingItem
+            description={polyglot.t("settings.enable_swipe_gesture_description")}
+            title={polyglot.t("settings.enable_swipe_gesture_label")}
+          >
+            <Switch
+              checked={enableSwipeGesture}
+              onChange={(value) => updateSettings({ enableSwipeGesture: value })}
+            />
+          </SettingItem>
+
+          {enableSwipeGesture && (
+            <>
+              <Divider />
+
+              <SettingItem
+                description={polyglot.t("settings.swipe_sensitivity_description")}
+                title={polyglot.t("settings.swipe_sensitivity_label")}
+              >
+                <Slider
+                  className="input-slider"
+                  max={1.5}
+                  min={0.5}
+                  showTicks={true}
+                  step={0.25}
+                  value={swipeSensitivity}
+                  onChange={(value) => updateSettings({ swipeSensitivity: value })}
+                />
+              </SettingItem>
+            </>
+          )}
+        </>
+      )}
     </>
   )
 }

@@ -1,8 +1,10 @@
 import globals from "globals"
+import importPlugin from "eslint-plugin-import-x"
 import js from "@eslint/js"
-import importPlugin from "eslint-plugin-import"
+import prettier from "eslint-config-prettier"
 import promise from "eslint-plugin-promise"
 import react from "eslint-plugin-react"
+import reactCompiler from "eslint-plugin-react-compiler"
 import reactHooks from "eslint-plugin-react-hooks"
 import reactRefresh from "eslint-plugin-react-refresh"
 
@@ -16,6 +18,8 @@ export default [
       "src/lib/utils.ts",
     ],
   },
+  js.configs.recommended,
+  prettier,
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
@@ -29,13 +33,24 @@ export default [
       import: importPlugin,
       promise,
       react,
+      "react-compiler": reactCompiler,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
     },
     rules: {
-      // Base ESLint rules
-      ...js.configs.recommended.rules,
+      curly: ["error", "all"],
       "no-unused-vars": "off",
+      "operator-assignment": "error",
+      "prefer-destructuring": [
+        "error",
+        {
+          VariableDeclarator: {
+            array: false,
+            object: true,
+          },
+        },
+      ],
+      "prefer-template": "error",
 
       // Import rules
       "import/extensions": [
@@ -44,10 +59,6 @@ export default [
         {
           css: "always",
           json: "always",
-          js: "never",
-          jsx: "never",
-          ts: "never",
-          tsx: "never",
         },
       ],
       "import/no-anonymous-default-export": "error",
@@ -73,6 +84,7 @@ export default [
             "object",
             "type",
           ],
+          named: true,
           "newlines-between": "always",
         },
       ],
@@ -89,6 +101,7 @@ export default [
       ...react.configs.recommended.rules,
       ...react.configs["jsx-runtime"].rules,
       ...reactHooks.configs.recommended.rules,
+      "react-compiler/react-compiler": "error",
       "react/jsx-no-target-blank": "off",
       "react/jsx-sort-props": [
         "error",

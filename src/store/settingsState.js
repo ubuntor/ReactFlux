@@ -4,11 +4,15 @@ import { getBrowserLanguage } from "@/utils/locales"
 
 const defaultValue = {
   articleWidth: 75,
+  coverDisplayMode: "auto",
   edgeToEdgeImages: false,
+  enableContextMenu: true,
+  enableSwipeGesture: true,
   fontFamily: "system-ui",
   fontSize: 1.05,
   homePage: "all",
   language: getBrowserLanguage(),
+  markReadBy: "view",
   markReadOnScroll: false,
   orderBy: "created_at",
   orderDirection: "desc",
@@ -20,9 +24,11 @@ const defaultValue = {
   showHiddenFeeds: false,
   showStatus: "unread",
   showUnreadFeedsOnly: false,
+  swipeSensitivity: 1,
   themeColor: "Blue",
   themeMode: "system",
   titleAlignment: "center",
+  updateContentOnFetch: false,
 }
 
 export const settingsState = persistentAtom("settings", defaultValue, {

@@ -9,14 +9,13 @@ import {
   updateEntriesStatus,
 } from "@/apis"
 import { polyglotState } from "@/hooks/useLanguage"
-import { contentState, setActiveContent, setEntries, setOffset } from "@/store/contentState"
+import { contentState, setActiveContent, setEntries } from "@/store/contentState"
 import {
   setHistoryCount,
   setStarredCount,
   setUnreadInfo,
   setUnreadTodayCount,
 } from "@/store/dataState"
-import { settingsState } from "@/store/settingsState"
 import { checkIsInLast24Hours } from "@/utils/date"
 
 const updateEntries = (entries, updatedEntries) => {
@@ -38,17 +37,10 @@ export const handleEntriesStatusUpdate = (entries, newStatus) => {
     return
   }
 
-  const { showStatus } = settingsState.get()
   if (newStatus === "read") {
     setHistoryCount((prev) => prev + filteredEntries.length)
-    if (showStatus === "unread") {
-      setOffset((prev) => prev - filteredEntries.length)
-    }
   } else {
     setHistoryCount((prev) => Math.max(0, prev - filteredEntries.length))
-    if (showStatus === "unread") {
-      setOffset((prev) => prev + filteredEntries.length)
-    }
   }
 
   for (const entry of filteredEntries) {
@@ -143,16 +135,18 @@ const useEntryActions = () => {
     try {
       const response = await getOriginalContent(activeContent.id)
       Message.success(polyglot.t("actions.fetched_content_success"))
-      setActiveContent({ ...activeContent, content: response.content })
+      const newContent = response.content
+      const newReadingTime = response.reading_time ?? activeContent.reading_time
+      setActiveContent({ ...activeContent, content: newContent, readingTime: newReadingTime })
     } catch (error) {
       console.error("Failed to fetch content: ", error)
       Message.error(polyglot.t("actions.fetched_content_error"))
     }
   }
 
-  const handleSaveToThirdPartyServices = async () => {
+  const handleSaveToThirdPartyServices = async (entry) => {
     try {
-      const response = await saveToThirdPartyServices(activeContent.id)
+      const response = await saveToThirdPartyServices(entry.id)
       if (response.status === 202) {
         Notification.success({
           title: polyglot.t("actions.saved_to_third-party_services_success"),
@@ -171,9 +165,14 @@ const useEntryActions = () => {
     }
   }
 
+  const handleOpenLinkExternally = (entry) => {
+    window.open(entry.url, "_blank")
+  }
+
   return {
     handleEntryStatusUpdate,
     handleFetchContent,
+    handleOpenLinkExternally,
     handleSaveToThirdPartyServices,
     handleToggleStarred,
     handleToggleStatus,

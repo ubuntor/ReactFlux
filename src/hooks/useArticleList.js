@@ -13,6 +13,7 @@ import {
   setHistoryCount,
   setStarredCount,
   setUnreadInfo,
+  setUnreadStarredCount,
   setUnreadTodayCount,
 } from "@/store/dataState"
 import { settingsState } from "@/store/settingsState"
@@ -43,7 +44,19 @@ const useArticleList = (info, getEntries) => {
     setIsArticleListReady(false)
 
     try {
-      const response = showStatus === "unread" ? await getEntries(0, "unread") : await getEntries()
+      let response
+
+      switch (showStatus) {
+        case "starred":
+          response = await getEntries(null, true)
+          break
+        case "unread":
+          response = await getEntries("unread")
+          break
+        default:
+          response = await getEntries()
+          break
+      }
 
       if (!filterDate) {
         switch (info.from) {
@@ -59,7 +72,9 @@ const useArticleList = (info, getEntries) => {
             setHistoryCount(response.total)
             break
           case "starred":
-            if (showStatus !== "unread") {
+            if (showStatus === "unread") {
+              setUnreadStarredCount(response.total)
+            } else {
               setStarredCount(response.total)
             }
             break
@@ -84,7 +99,6 @@ const useArticleList = (info, getEntries) => {
     if (isAppDataReady) {
       fetchArticleList(getEntries)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAppDataReady])
 
   return { fetchArticleList }
